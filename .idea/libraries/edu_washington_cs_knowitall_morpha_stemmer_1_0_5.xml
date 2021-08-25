@@ -1,0 +1,10 @@
+<component name="libraryTable">
+  <library name="edu.washington.cs.knowitall:morpha-stemmer:1.0.5" type="repository">
+    <properties maven-id="edu.washington.cs.knowitall:morpha-stemmer:1.0.5" />
+    <CLASSES>
+      <root url="jar://$PROJECT_DIR$/lib/morpha-stemmer-1.0.5.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES />
+  </library>
+</component>
