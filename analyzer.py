@@ -46,13 +46,13 @@ def extractWords(text: str):
         match = re.match('\w+', character)
         if match:
             currentWord += character
-            if not startIndex:
+            if startIndex is None:
                 startIndex = i
             if i == len(text) - 1:
                 words.append(TextSegment(startIndex, i, currentWord))
                 currentWord = ''
                 startIndex = None
-        elif startIndex:
+        elif startIndex is not None:
             words.append(TextSegment(startIndex, i, currentWord))
             currentWord = ''
             startIndex = None
