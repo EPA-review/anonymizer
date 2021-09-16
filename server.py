@@ -11,8 +11,9 @@ CORS(app)
 def analyze():
     requestBody = request.json
     text = requestBody['text']
+    names = requestBody['names']
 
-    return jsonify(serializeList(analyzeText(text)))
+    return jsonify(serializeList(analyzeText(text, names)))
 
 
 if __name__ == '__main__':

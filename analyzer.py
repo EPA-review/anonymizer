@@ -22,20 +22,15 @@ class TextSegment(Serializable):
         }
 
 
-def analyzeText(text: str):
-    testResidentFName = "Jason"
-    testResidentLName = "Bernard"
-    testObserverFName = "Brent"
-    testObserverLName = "Thoma"
+def analyzeText(text: str, names: List[str]):
     flag = False
 
     textSegments = extractWords(text)
     result: List[TextSegment] = []
     for textSegment in textSegments:
-        label = AnonymizeWord(textSegment.label, testResidentFName,
-                              testResidentLName, testObserverFName, testObserverLName, flag)
+        label = AnonymizeWord(textSegment.label, names, flag)
         flag = SetAnonFlag(textSegment.label)
-        if label != textSegment.label.lower():
+        if label is not None:
             textSegment.label = label
             result.append(textSegment)
 
