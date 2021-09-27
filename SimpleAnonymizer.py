@@ -1,7 +1,9 @@
 # import spellchecker
 # from spellchecker import SpellChecker
+import re
 
-_nicknames = ["Rick", "Ricky", "Richie", "Dick"]
+_nicknames = ['rick', 'ricky', 'richie', 'dick', 'stu', 'elle', 'liz', 'jay', 'kat', 'cat']
+_ignore = ['i', 'you']
 
 """
 Inputs:
@@ -232,7 +234,7 @@ def AnonymizeWord_NameSubword(W, Name):
 
         # check to see if the original word has the processing string as a prefix
         # if so it is a likely nickname
-        if (flagSuffix and W.startswith(processing)):
+        if (flagSuffix and Name.startswith(processing)):
             result = "NICKNAME?"
             flagPrefix = True
 
@@ -257,8 +259,8 @@ def AnonymizeWord_NameSubword(W, Name):
                 flagSuffix = True
                 processing = processing[0:len(processing) - 2]
 
-            # if after removing the ending the word matches the
-            if (flagSuffix and W.startswith(processing)):
+            # if after removing the ending the word matches the name
+            if (flagSuffix and Name.startswith(processing)):
                 result = "NICKNAME?"
                 flagPrefix = True
 
@@ -374,45 +376,67 @@ Think of it as a collection of rules to be applied.
 def AnonymizeWord(W, Names, F):
     # make sure everything is in lowercase in local copies
     result = W.lower()
+    regex = re.compile('[^a-zA-Z0-9\s]')
+    # First parameter is the replacement, second parameter is your input string
+    result = regex.sub('', result)
 
-    # for each rule first check to see if the word has already changed, if it is already changed then do not run anymore rules
-    #    print(result)
-    result = AnonymizeWord_Pronoun(result)
-    #    print(result)
+    index = 0
+    ignore = False
+    while (index < len(_ignore)) and (not ignore):
+        # seperated the check in case we want to return a different value for first and last name nicknames
+        if (W == _ignore[index].lower()):
+            ignore = True
+        index = index + 1
 
-    if (result == W.lower()):
-        result = AnonymizeWord_Adjective(result)
-        # print(result)
+    if (not ignore):
+        # for each rule first check to see if the word has already changed, if it is already changed then do not run anymore rules
+        #    print(result)
+        result = AnonymizeWord_Pronoun(result)
+        #    print(result)
 
-    if (result == W.lower()):
-        result = AnonymizeWord_Abbreviations(result)
-        # print(result)
-
-    for name in Names:
-        _name = name.lower();
         if (result == W.lower()):
-            result = AnonymizeWord_Name(result, _name)
+            result = AnonymizeWord_Adjective(result)
             # print(result)
 
         if (result == W.lower()):
-            result = AnonymizeWord_NickName(result, _name)
+            result = AnonymizeWord_Abbreviations(result)
+            # print(result)
+
+        for name in Names:
+            _name = name.lower();
+            if (result == W.lower()):
+                result = AnonymizeWord_Name(result, _name)
+                # print(result)
+
+            if (result == W.lower()):
+                result = AnonymizeWord_NickName(result, _name)
+                # print(result)
+
+            if (result == W.lower()):
+                result = AnonymizeWord_NameSubword(result, _name)
+                # print(result)
+
+        if (result == W.lower()):
+            result = AnonymizeWord_Flag(result, F)
             # print(result)
 
         if (result == W.lower()):
-            result = AnonymizeWord_NameSubword(result, _name)
-            # print(result)
-
-    if (result == W.lower()):
-        result = AnonymizeWord_Flag(result, F)
-        # print(result)
-
-    if (result == W.lower()):
-        result = None
+            result = None
 
     return result
 
 
-def SetAnonFlag(W):
+"""
+Inputs:
+    String W: The current word under consideration
+    Boolean F: A flag that indicates the previous word was unusual
+
+Returns:
+    Boolean: Return an anonymization flag
+
+SetAnonFlag takes the word and determines if it is a title. If so then the next word should be anonymized. Also, if the word is an initial then the next word should also be anonymized.
+"""
+def SetAnonFlag(W, F):
     result = False
     processing = W.lower();
 
@@ -424,66 +448,50 @@ def SetAnonFlag(W):
             (processing == "ms") or
             (processing == "mrs")):
         result = True
+    elif (F == True and len(W) == 1):
+        # if the flag is set and
+        # the word is one character long (an initial) then flag the next word as well
+        result = True
 
     return result
+
+
+def Test():
+    samples = ['Grayson as discussed Dr. A Henderson think you need to work on strategies to help you ensure',
+               'that you are completing full reassessments including being aware of what results',
+               'or tests that you have ordered are still outstanding.    You also would improve by',
+               'being more mindful of timing to reassess patients.    Your patient care was very EB',
+               'and you are quite good at accessing relevant guidelines and critically thinking',
+               'your way through them as they would apply to your particular patient.']
+    for sample in samples:
+        regex = re.compile('[^a-zA-Z0-9\s]')
+        # First parameter is the replacement, second parameter is your input string
+        sample = regex.sub('', sample)
+        words = sample.split()
+        names = ['Grayson', 'Wilson', 'Joanna', 'Smith']
+        flag = False
+
+        for w in words:
+            w = w.lower()
+            index = 0
+            ignore = False
+            while (index < len(_ignore)) and (not ignore):
+                # seperated the check in case we want to return a different value for first and last name nicknames
+                if (w == _ignore[index].lower()):
+                    ignore = True
+                index = index + 1
+
+            if (not ignore):
+                result = AnonymizeWord(w, names, flag)
+                flag = SetAnonFlag(w, flag)
+                result = "None" if result is None else result
+                print("word = " + w + ", result = " + result + ", flag = " + str(flag))
 
 
 result = ""
 flag = False
 
-# test 1: basic functionality
-testWord = "Word"
-names = ["Jason","Bernard","Brent","Thoma"]
-result = AnonymizeWord(testWord, names, False)
-flag = SetAnonFlag(testWord)
-print((result if result else "NONE") + " " + str(flag))
+# comment this out when the test is not needed
+# Test()
 
-# test: spellcheck
-testWord = "Kevin"
-names = ["Jason","Bernard","Brent","Thoma"]
-result = AnonymizeWord(testWord, names, False)
-flag = SetAnonFlag(testWord)
-print((result if result else "NONE") + " " + str(flag))
-
-# test: pronoun
-testWordPronoun = "he"
-result = AnonymizeWord(testWordPronoun, names, False)
-flag = SetAnonFlag(testWordPronoun)
-print((result if result else "NONE") + " " + str(flag))
-
-# test: adjective
-testWordAdjective = "female"
-result = AnonymizeWord(testWordAdjective, names, False)
-flag = SetAnonFlag(testWordAdjective)
-print((result if result else "NONE") + " " + str(flag))
-
-# test: abbreviation
-testWordAbbreviation = "f"
-result = AnonymizeWord(testWordAbbreviation, names, False)
-flag = SetAnonFlag(testWordAbbreviation)
-print((result if result else "NONE") + " " + str(flag))
-
-# test: name
-testWordName = "Jason"
-testResidentFName = "Jason"
-result = AnonymizeWord(testWordName, names, False)
-flag = SetAnonFlag(testWordName)
-print((result if result else "NONE") + " " + str(flag))
-
-# test: nickname
-testWordNickname = "Richie"
-names = ["Richard","Bernard","Brent","Thoma"]
-result = AnonymizeWord(testWordNickname, names,
-                       False)
-flag = SetAnonFlag(testWordNickname)
-print((result if result else "NONE") + " " + str(flag))
-
-# test: flag
-testWordFlag1 = "Doctor"
-result = AnonymizeWord(testWordFlag1, names, False)
-flag = SetAnonFlag(testWordFlag1)
-print((result if result else "NONE") + " " + str(flag))
-testWordFlag2 = "Bernard"
-result = AnonymizeWord(testWordFlag2, names, flag)
-flag = SetAnonFlag(testWordFlag2)
-print((result if result else "NONE") + " " + str(flag))
+#print("done")

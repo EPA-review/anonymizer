@@ -29,7 +29,7 @@ def analyzeText(text: str, names: List[str]):
     result: List[TextSegment] = []
     for textSegment in textSegments:
         label = AnonymizeWord(textSegment.label, names, flag)
-        flag = SetAnonFlag(textSegment.label)
+        flag = SetAnonFlag(textSegment.label, flag)
         if label is not None:
             textSegment.label = label
             result.append(textSegment)
