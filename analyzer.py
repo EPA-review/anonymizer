@@ -43,7 +43,7 @@ def extractWords(text: str):
     currentWord: str = ''
     for i in range(len(text)):
         character = text[i]
-        match = re.match('\w+', character)
+        match = re.match('[\w\']+', character)
         if match:
             currentWord += character
             if startIndex is None:
