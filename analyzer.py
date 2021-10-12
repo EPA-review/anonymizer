@@ -27,8 +27,18 @@ def analyzeText(text: str, names: List[str]):
 
     textSegments = extractWords(text)
     result: List[TextSegment] = []
-    for textSegment in textSegments:
-        label = AnonymizeWord(textSegment.label, names, flag)
+    textSegmentsLength = len(textSegments)
+    for i in range(textSegmentsLength):
+        textSegment = textSegments[i]
+        previousSegment = textSegments[i - 1] if i > 0 else None
+        nextSegment = textSegments[i + 1] if i < textSegmentsLength - 1 else None
+        label = AnonymizeWord(
+            textSegment.label, 
+            previousSegment.label if previousSegment else None, 
+            nextSegment.label if nextSegment else None, 
+            names, 
+            flag
+        )
         flag = SetAnonFlag(textSegment.label, flag)
         if label is not None:
             textSegment.label = label
@@ -43,7 +53,7 @@ def extractWords(text: str):
     currentWord: str = ''
     for i in range(len(text)):
         character = text[i]
-        match = re.match('[\w\']+', character)
+        match = re.match('[\w\'/]+', character)
         if match:
             currentWord += character
             if startIndex is None:
