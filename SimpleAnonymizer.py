@@ -3,8 +3,9 @@
 import re
 
 _nicknames = ['rick', 'ricky', 'richie', 'dick', 'stu', 'elle', 'liz', 'jay', 'kat', 'cat']
-_ignore = ['i', 'you', 'male', 'female', 'epa']
+_ignore = ['you', 'male', 'female', 'epa', 'e.g.', 'eg', 'i.e.', 'ie']
 _acronyms = ['epa','stemi']
+_badSymbols = ['/', '\\', '#', '$', ':']
 
 """
 Inputs:
@@ -30,22 +31,22 @@ def AnonymizeWord_Pronoun(W):
             (W == "his") or
             (W == "hers") or
             (W == "himself") or
-            (W == "herself") or
-            (W == "man") or
-            (W == "woman") or
-            (W == "men") or
-            (W == "women") or
-            (W == "boy") or
-            (W == "girl") or
-            (W == "mother") or
-            (W == "father") or
-            (W == "lady") or
-            (W == "uncle") or
-            (W == "aunt") or
-            (W == "son") or
-            (W == "daughter") or
-            (W == "husband") or
-            (W == "wife")):
+            (W == "herself")):
+            #(W == "man") or
+            #(W == "woman") or
+            #(W == "men") or
+            #(W == "women") or
+            #(W == "boy") or
+            #(W == "girl") or
+            #(W == "mother") or
+            #(W == "father") or
+            #(W == "lady") or
+            #(W == "uncle") or
+            #(W == "aunt") or
+            #(W == "son") or
+            #(W == "daughter") or
+            #(W == "husband") or
+            #(W == "wife"))
         _result = "PRONOUN"
 
     return _result
@@ -71,6 +72,33 @@ def AnonymizeWord_Acronym(W):
         _flag = True
 
     return _flag
+
+
+"""
+Inputs:
+    W: A string. The word under consideration.
+
+Returns:
+    string: "INITIAL" if it detects they are initials  
+
+Function:
+"""
+
+
+def AnonymizeWord_Initials(W, N, Name, FName):
+    _result = W
+
+    # if the name starts with the W
+    if Name.find(N) == 0 and FName.find(W.lower()) == 0 and len(W) == 1:
+        _result = "INITIAL"
+    elif len(W) == 2:
+        first = W[0].lower()
+        second = W[1].lower()
+        if FName.find(first) == 0 and Name.find(second) == 0:
+            _result = "INITIAL"
+
+    return _result
+
 
 """
 Inputs:
@@ -136,7 +164,7 @@ def AnonymizeWord_Abbreviations(W):
     _result = W
 
     if ((W == "m") or
-            (W == "f")):
+        (W == "f")):
         _result = "FLAGGED"
 
     return _result
@@ -212,7 +240,7 @@ Functions:
 """
 
 
-def AnonymizeWord_NameSubword(W, Name):
+def AnonymizeWord_NameSubword(W, P, N, Name, FName):
     _result = W
     processing = W  # as the word is modified, this is used to prevent changing the original
 
@@ -244,20 +272,10 @@ def AnonymizeWord_NameSubword(W, Name):
 
     # if the name starts with the W, and W is not a word
     # currently not working, need spellchecker
-    if Name.find(W) == 0 and _flagNotWord:
-        _result = "NICKNAME?"
-        _flagPrefix = True
-        _flagDone = True
-
-    # if the name starts with the W
-    if Name.find(W) == 0 and len(W) > 1:
-        _result = "FLAGGED"
-        _flagPrefix = True
-        _flagDone = True
-    elif Name.find(W) == 0 and len(W) == 1:
-        _result = "INITIAL"
-        _flagPrefix = True
-        _flagDone = True
+    #if Name.find(W) == 0 and _flagNotWord:
+    #    _result = "NICKNAME?"
+    #    _flagPrefix = True
+    #    _flagDone = True
 
     if (not _flagDone):
         # does the word end in y or i or ie
@@ -281,7 +299,7 @@ def AnonymizeWord_NameSubword(W, Name):
 
         # check to see if the original word has the processing string as a prefix
         # if so it is a likely nickname
-        if _flagSuffix and Name.startswith(processing):
+        if _flagSuffix and Name.startswith(processing) and len(processing) > 1:
             _result = "NICKNAME?"
             _flagPrefix = True
 
@@ -307,12 +325,12 @@ def AnonymizeWord_NameSubword(W, Name):
                 processing = processing[0:len(processing) - 2]
 
             # if after removing the ending the word matches the name
-            if _flagSuffix and Name.startswith(processing):
+            if _flagSuffix and Name.startswith(processing) and len(processing) < len(W):
                 _result = "NICKNAME?"
                 _flagPrefix = True
 
     # this word has a strange suffix, flag it
-    if not _flagPrefix and (_flagSuffixIE or _flagSuffixI or _flagSuffixKY):
+    if not _flagPrefix and (_flagSuffixIE or _flagSuffixI or _flagSuffixKY) and len(processing) > 1:
         _result = "FLAGGED"
 
     # this isn't a word and it has a strange ending
@@ -430,68 +448,107 @@ Think of it as a collection of rules to be applied.
 """
 
 
-def AnonymizeWord(W, Names, F):
+def AnonymizeWord(W, P, N, Names, F):
     # make sure everything is in lowercase in local copies
-    original = W;
+    original = W
+    previous = P
+    next = N
     _result = W.lower()
     _original = W.lower()
-    regex = re.compile('[^a-zA-Z0-9\s]')
-    # First parameter is the replacement, second parameter is your input string
-    _result = regex.sub('', _result)
-    _original = regex.sub('', _original)
-    ignoreFlag = Contains(_ignore, W)
+    if not previous is None:
+        _previous = P.lower()
+    else:
+        _previous = None
 
-    if not ignoreFlag:
-        # for each rule first check to see if the word has already changed,
-        # if it is already changed then do not run anymore rules
-        #    print(result)
-        _result = AnonymizeWord_Pronoun(_result)
-        #    print(result)
+    if not next is None:
+        _next = N.lower()
+    else:
+        _next = None
 
-        if _result == _original:
-            if AnonymizeWord_Contraction(original):
-                _result = "CONTRACTION"
-               # print(result)
+    _notAWordFlag = False
 
-            if AnonymizeWord_Acronym(original):
-                _result = "ACRONYM"
-               # print(result)
+    # check for irregular characters
+    for symbol in _badSymbols:
+        if (_result.find(symbol) > 0):
+            _notAWordFlag = True
 
-        if _result == _original:
-            _result = AnonymizeWord_Adjective(_result)
-            # print(result)
+    if not _notAWordFlag:
+        regex = re.compile('[^a-zA-Z0-9\s]')
 
-        if _result == _original:
-            _result = AnonymizeWord_Abbreviations(_result)
-            # print(result)
+        # First parameter is the replacement, second parameter is your input string
+        _result = regex.sub('', _result)
+        _original = regex.sub('', _original)
+        if not _previous is None:
+            _previous = regex.sub('', _previous)
+        if not _next is None:
+            _next = regex.sub('', _next)
 
-        if _result == _original:
-            for name in Names:
-                _name = name.lower();
-                if _result == _original:
-                    _result = AnonymizeWord_Name(_result, _name)
-                    # print(result)
+        ignoreFlag = Contains(_ignore, _original)
 
-                if _result == _original:
-                    _result = AnonymizeWord_NickName(_result, _name)
-                    # print(result)
+        if not ignoreFlag:
+            # for each rule first check to see if the word has already changed,
+            # if it is already changed then do not run anymore rules
+            #    print(result)
+            _result = AnonymizeWord_Pronoun(_result)
+            #    print(result)
 
-                if _result == _original:
-                    _result = AnonymizeWord_NameSubword(_result, _name)
-                    # print(result)
+            if _result == _original:
+                if AnonymizeWord_Contraction(original):
+                    _result = "CONTRACTION"
+                   # print(result)
 
-        if _result == _original:
-            _result = AnonymizeWord_Flag(_result, F)
-            # print(result)
+                if AnonymizeWord_Acronym(original):
+                    for name in Names:
+                        if not _result == "INITIAL":
+                            _name = name.lower();
+                            _result = AnonymizeWord_Initials(original, _next, _name, Names[0].lower())
 
-        if _result == _original:
+                    if not _result == "INITIAL":
+                        _result = "ACRONYM"
+                # print(result)
+
+            if _result == _original:
+                _result = AnonymizeWord_Adjective(_result)
+                # print(result)
+
+            if _result == _original:
+                _result = AnonymizeWord_Abbreviations(_result)
+                # print(result)
+
+            if _result == _original:
+                for name in Names:
+                    _name = name.lower();
+                    if _result == _original:
+                        _result = AnonymizeWord_Name(_result, _name)
+                        # print(result)
+
+                    if _result == _original:
+                        _result = AnonymizeWord_Initials(_result, _next, _name, Names[0].lower())
+                        # print(result)
+
+                    if _result == _original:
+                        _result = AnonymizeWord_NickName(_result, _name)
+                        # print(result)
+
+                    if _result == _original:
+                        _result = AnonymizeWord_NameSubword(_result, _previous, _next, _name, Names[0].lower())
+                        # print(result)
+
+            if _result == _original:
+                _result = AnonymizeWord_Flag(_result, F)
+                _result = None
+                # print(result)
+
+            if _result == _original:
+                _result = None
+        elif ignoreFlag:
             _result = None
-    elif ignoreFlag:
-        _result = None
 
-    if _result == "ACRONYM":
-        _result = None
-    elif _result == "CONTRACTION":
+        if _result == "ACRONYM":
+            _result = None
+        elif _result == "CONTRACTION":
+            _result = None
+    else:
         _result = None
 
     return _result
@@ -528,17 +585,19 @@ def SetAnonFlag(W, F):
 
     return _result
 
-
-def Test(R, F):
-    _result = R;
-    _flag = F;
-    samples = ['apply. Wasn\'t. STEMI. Stemi.  J Smith. Grayson as discussed Dr. A Henderson think'
+"""    samples = ['I am  a fool of a took. apply. STEMI. Stemi.  J Smith. Grayson as discussed Dr. A Henderson think'
                'you need to work on strategies to help you ensure',
                'that you are completing full reassessments including being aware of what results',
                'or tests that you have ordered are still outstanding.    You also would improve by',
                'being more mindful of timing to reassess patients.    Your patient care was very EB',
                'and you are quite good at accessing relevant guidelines and critically thinking',
                'your way through them as they would apply to your particular patient. wasn\'t']
+    """
+
+def Test(R, F):
+    _result = R
+    _flag = F
+    samples = ['GW e.g. i.e.']
     for sample in samples:
         regex = re.compile('[^a-zA-Z0-9\s\']')
         # First parameter is the replacement, second parameter is your input string
@@ -546,24 +605,29 @@ def Test(R, F):
         words = sample.split()
         names = ['Grayson', 'Wilson', 'Joanna', 'Smith']
 
+        prev = None
+        next = None
+        index = 0
         for w in words:
-            if (w == 'wasnt'):
-                w = 'Wasn\'t'
+            if (index+1 < len(words)):
+                next = words[index+1]
+            else:
+                next = None
+            _result = AnonymizeWord(w, prev, next, names, _flag)
 
-            #w = w.lower()
-            #ignoreFlag = Contains(_ignore, w)
-            #ignoreFlag = ignoreFlag or Contains(_acronyms, w)
-
-            #if not ignoreFlag:
-            _result = AnonymizeWord(w, names, _flag)
-            _result = "None" if result is None else result
+            if _result is None:
+                output = "None"
+            else:
+                output = _result
             _flag = SetAnonFlag(w, _flag)
 
-            print("word = " + w + ", result = " + _result + ", flag = " + str(_flag))
+            print("word = " + w + ", result = " + output + ", flag = " + str(_flag))
+            prev = w
+            index = index + 1
 
 
 result = ""
 flag = False
 
 # comment this out when the test is not needed
-# Test(result, flag)
+#Test(result, flag)
