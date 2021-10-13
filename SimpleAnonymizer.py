@@ -89,8 +89,9 @@ def AnonymizeWord_Initials(W, N, Name, FName):
     _result = W
 
     # if the name starts with the W
-    if Name.find(N) == 0 and FName.find(W.lower()) == 0 and len(W) == 1:
-        _result = "INITIAL"
+    if not N is None:
+        if Name.find(N) == 0 and FName.find(W.lower()) == 0 and len(W) == 1:
+            _result = "INITIAL"
     elif len(W) == 2:
         first = W[0].lower()
         second = W[1].lower()
@@ -630,4 +631,4 @@ result = ""
 flag = False
 
 # comment this out when the test is not needed
-#Test(result, flag)
+Test(result, flag)
