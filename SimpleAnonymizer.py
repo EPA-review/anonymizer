@@ -467,6 +467,7 @@ def AnonymizeWord(W, P, N, Names, F):
         _next = None
 
     _notAWordFlag = False
+    _contractionFlag = False
 
     # check for irregular characters
     for symbol in _badSymbols:
@@ -487,15 +488,21 @@ def AnonymizeWord(W, P, N, Names, F):
         ignoreFlag = Contains(_ignore, _original)
 
         if not ignoreFlag:
+            if _result == _original and F == True:
+                _result = AnonymizeWord_Flag(_result, F)
+                # print(result)
+
             # for each rule first check to see if the word has already changed,
             # if it is already changed then do not run anymore rules
             #    print(result)
-            _result = AnonymizeWord_Pronoun(_result)
+            if _result == _original:
+                _result = AnonymizeWord_Pronoun(_result)
             #    print(result)
 
             if _result == _original:
                 if AnonymizeWord_Contraction(original):
                     _result = "CONTRACTION"
+                    _contractionFlag = True
                    # print(result)
 
                 if AnonymizeWord_Acronym(original):
@@ -516,12 +523,18 @@ def AnonymizeWord(W, P, N, Names, F):
                 _result = AnonymizeWord_Abbreviations(_result)
                 # print(result)
 
-            if _result == _original:
+            if _result == _original or _contractionFlag:
                 for name in Names:
                     _name = name.lower();
                     if _result == _original:
                         _result = AnonymizeWord_Name(_result, _name)
                         # print(result)
+
+                    if _contractionFlag:
+                        _temp = _original[:len(_original)-1]
+                        if AnonymizeWord_Name(_temp, _name) == "NAME":
+                            _result = "NAME"
+                            _contractionFlag = False
 
                     if _result == _original:
                         _result = AnonymizeWord_Initials(_result, _next, _name, Names[0].lower())
@@ -531,14 +544,10 @@ def AnonymizeWord(W, P, N, Names, F):
                         _result = AnonymizeWord_NickName(_result, _name)
                         # print(result)
 
-                    if _result == _original:
-                        _result = AnonymizeWord_NameSubword(_result, _previous, _next, _name, Names[0].lower())
-                        # print(result)
-
-            if _result == _original:
-                _result = AnonymizeWord_Flag(_result, F)
-                _result = None
-                # print(result)
+            """                    if _result == _original:
+                                    _result = AnonymizeWord_NameSubword(_result, _previous, _next, _name, Names[0].lower())
+                                    # print(result)
+            """
 
             if _result == _original:
                 _result = None
@@ -547,7 +556,7 @@ def AnonymizeWord(W, P, N, Names, F):
 
         if _result == "ACRONYM":
             _result = None
-        elif _result == "CONTRACTION":
+        elif _result == "CONTRACTION" or _contractionFlag:
             _result = None
     else:
         _result = None
@@ -586,7 +595,7 @@ def SetAnonFlag(W, F):
 
     return _result
 
-"""    samples = ['I am  a fool of a took. apply. STEMI. Stemi.  J Smith. Grayson as discussed Dr. A Henderson think'
+"""    samples = ['Dr. Wilson's. Wilson I am  a fool of a took. apply. STEMI. Stemi.  J Smith. Grayson as discussed Dr. A Henderson think'
                'you need to work on strategies to help you ensure',
                'that you are completing full reassessments including being aware of what results',
                'or tests that you have ordered are still outstanding.    You also would improve by',
@@ -598,7 +607,7 @@ def SetAnonFlag(W, F):
 def Test(R, F):
     _result = R
     _flag = F
-    samples = ['GW e.g. i.e.']
+    samples = ['Wilson\'s I am  a fool of a took. apply. STEMI. Stemi.  J Smith. Grayson as discussed Dr. A Henderson think']
     for sample in samples:
         regex = re.compile('[^a-zA-Z0-9\s\']')
         # First parameter is the replacement, second parameter is your input string
@@ -631,4 +640,4 @@ result = ""
 flag = False
 
 # comment this out when the test is not needed
-Test(result, flag)
+#Test(result, flag)
