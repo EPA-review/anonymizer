@@ -1,6 +1,7 @@
 # import spellchecker
 # from spellchecker import SpellChecker
 import re
+from string import whitespace
 
 # Nicknames are not passed into the call to AnonymizeText
 #_nicknames = ['rick', 'ricky', 'richie', 'dick', 'stu', 'elle', 'liz', 'jay', 'kat', 'cat']
@@ -575,7 +576,12 @@ Returns:
 SetAnonFlag takes the word and determines if it is a title. If so then the next word should be anonymized. Also, if the word is an initial then the next word should also be anonymized.
 """
 def AnonymizeText(T, Names, NickNames):
-    _result = ""
+    _result = []
+
+    whitespaces = [i for i, char in enumerate(T) if char in whitespace]
+
+    start = 0
+    end = 0
 
     regex = re.compile('[^a-zA-Z0-9\s\']')
     # First parameter is the replacement, second parameter is your input string
@@ -587,6 +593,13 @@ def AnonymizeText(T, Names, NickNames):
     _flag = False
     index = 0
     for w in _words:
+        end = whitespaces[index]
+        tmp = T[start:end]
+        print(tmp)
+        start = end + 1
+
+        resultAsDict = {"start":start,"end":end,"label":""}
+
         if (index + 1 < len(_words)):
             next = _words[index + 1]
         else:
@@ -595,11 +608,13 @@ def AnonymizeText(T, Names, NickNames):
 
         if _anonWord is None:
             output = "None"
-            _result = _result + " " + w
+            #_result = _result + " " + w
         else:
             output = _anonWord
-            _result = _result + " " + output
+            #_result = _result + " " + output
         _flag = SetAnonFlag(w, _flag)
+        resultAsDict["label"] = output
+        _result.append(resultAsDict)
 
         #print("word = " + w + ", result = " + output + ", flag = " + str(_flag))
         prev = w
