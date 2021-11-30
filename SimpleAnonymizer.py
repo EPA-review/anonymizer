@@ -579,6 +579,7 @@ def AnonymizeText(T, Names, NickNames):
     _result = []
 
     whitespaces = [i for i, char in enumerate(T) if char in whitespace]
+    whitespaces.append(len(T))
 
     start = 0
     end = 0
@@ -594,9 +595,8 @@ def AnonymizeText(T, Names, NickNames):
     index = 0
     for w in _words:
         end = whitespaces[index]
-        tmp = T[start:end]
-        print(tmp)
-        start = end + 1
+        #tmp = T[start:end]
+        #print(tmp)
 
         resultAsDict = {"start":start,"end":end,"label":""}
 
@@ -612,13 +612,15 @@ def AnonymizeText(T, Names, NickNames):
         else:
             output = _anonWord
             #_result = _result + " " + output
+            resultAsDict["label"] = output
+            _result.append(resultAsDict)
+
         _flag = SetAnonFlag(w, _flag)
-        resultAsDict["label"] = output
-        _result.append(resultAsDict)
 
         #print("word = " + w + ", result = " + output + ", flag = " + str(_flag))
         prev = w
         index = index + 1
+        start = end + 1
 
     #print("anonymized text = " + _result)
     return _result
@@ -701,6 +703,7 @@ flag = False
 """
 def Test():
     text = 'I\' m a fool of a took. Dr.  Wilson\'s. Dr P Wilson, . Jay as discussed Dr. A Henderson think you need to work on strategies to help you ensure that you are completing full reassessments including being aware of what results or tests that you have ordered are still outstanding. You also would improve by being more mindful of timing to reassess patients. Your patient care was very EB and you are quite good at accessing relevant guidelines and critically thinking your way through them as they would apply to your particular patient. wasn\'t'
+    text = 'Hello, I am Dr. Watson'
     names = ['Jason','Wilson','Joanna','Smith']
     nicknames = {"richard":['rick','ricky','richie','dick'],
                  "stewart":['stu'],
