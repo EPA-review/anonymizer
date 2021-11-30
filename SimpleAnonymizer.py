@@ -2,7 +2,8 @@
 # from spellchecker import SpellChecker
 import re
 
-_nicknames = ['rick', 'ricky', 'richie', 'dick', 'stu', 'elle', 'liz', 'jay', 'kat', 'cat']
+# Nicknames are not passed into the call to AnonymizeText
+#_nicknames = ['rick', 'ricky', 'richie', 'dick', 'stu', 'elle', 'liz', 'jay', 'kat', 'cat']
 _ignore = ['you', 'male', 'female', 'epa', 'e.g.', 'eg', 'i.e.', 'ie']
 _acronyms = ['epa','stemi']
 _badSymbols = ['/', '\\', '#', '$', ':']
@@ -210,17 +211,18 @@ Function:
 """
 
 
-def AnonymizeWord_NickName(W, Name):
+def AnonymizeWord_NickName(W, Name, Nicknames):
     _result = W
-    found = False
-    index = 0
 
-    while (index < len(_nicknames)) and (not found):
-        # seperated the check in case we want to return a different value for first and last name nicknames
-        if (Name == _nicknames[index].lower()):
-            _result = "NICKNAME"
-            found = True
-        index = index + 1
+    if Name in Nicknames:
+        _list = Nicknames[Name]
+        found = False
+        index = 0
+        while (index < len(_list)) and (not found):
+            if (W == _list[index].lower()):
+                _result = "NICKNAME"
+                found = True
+            index = index + 1
 
     return _result
 
@@ -447,9 +449,7 @@ Returns:
 AnonymizeWord functions by calling several other functions to do the actual work of anonymization.
 Think of it as a collection of rules to be applied.
 """
-
-
-def AnonymizeWord(W, P, N, Names, F):
+def AnonymizeWord(W, P, N, Names, Nicknames, F):
     # make sure everything is in lowercase in local copies
     original = W
     previous = P
@@ -541,7 +541,7 @@ def AnonymizeWord(W, P, N, Names, F):
                         # print(result)
 
                     if _result == _original:
-                        _result = AnonymizeWord_NickName(_result, _name)
+                        _result = AnonymizeWord_NickName(_result, _name, Nicknames)
                         # print(result)
 
             """                    if _result == _original:
@@ -563,6 +563,50 @@ def AnonymizeWord(W, P, N, Names, F):
 
     return _result
 
+"""
+Inputs:
+    String T: The text to anonymize
+    Array[String] Names: The names of the resident and observer
+    Array[String] NickNames: A list of known nicknames
+
+Returns:
+    String: Returns the anonymized text
+
+SetAnonFlag takes the word and determines if it is a title. If so then the next word should be anonymized. Also, if the word is an initial then the next word should also be anonymized.
+"""
+def AnonymizeText(T, Names, NickNames):
+    _result = ""
+
+    regex = re.compile('[^a-zA-Z0-9\s\']')
+    # First parameter is the replacement, second parameter is your input string
+    _text = regex.sub('', T)
+    _words = _text.split()
+
+    prev = None
+    next = None
+    _flag = False
+    index = 0
+    for w in _words:
+        if (index + 1 < len(_words)):
+            next = _words[index + 1]
+        else:
+            next = None
+        _anonWord = AnonymizeWord(w, prev, next, Names, NickNames, _flag)
+
+        if _anonWord is None:
+            output = "None"
+            _result = _result + " " + w
+        else:
+            output = _anonWord
+            _result = _result + " " + output
+        _flag = SetAnonFlag(w, _flag)
+
+        #print("word = " + w + ", result = " + output + ", flag = " + str(_flag))
+        prev = w
+        index = index + 1
+
+    #print("anonymized text = " + _result)
+    return _result
 
 """
 Inputs:
@@ -574,8 +618,6 @@ Returns:
 
 SetAnonFlag takes the word and determines if it is a title. If so then the next word should be anonymized. Also, if the word is an initial then the next word should also be anonymized.
 """
-
-
 def SetAnonFlag(W, F):
     _result = False
     processing = W.lower()
@@ -604,6 +646,9 @@ def SetAnonFlag(W, F):
                'your way through them as they would apply to your particular patient. wasn\'t']
     """
 
+"""
+DEPRECATED
+With the change to the main interface this test procedure no longer is valid
 def Test(R, F):
     _result = R
     _flag = F
@@ -638,6 +683,18 @@ def Test(R, F):
 
 result = ""
 flag = False
+"""
+def Test():
+    text = 'I\' m a fool of a took. Dr.  Wilson\'s. Dr P Wilson, . Jay as discussed Dr. A Henderson think you need to work on strategies to help you ensure that you are completing full reassessments including being aware of what results or tests that you have ordered are still outstanding. You also would improve by being more mindful of timing to reassess patients. Your patient care was very EB and you are quite good at accessing relevant guidelines and critically thinking your way through them as they would apply to your particular patient. wasn\'t'
+    names = ['Jason','Wilson','Joanna','Smith']
+    nicknames = {"richard":['rick','ricky','richie','dick'],
+                 "stewart":['stu'],
+                 "samuel":['sam','sammy'],
+                 "elizabeth":['elle', 'liz'],
+                 "jason":['jay']
+                }
+    AnonymizeText(text,names,nicknames)
 
 # comment this out when the test is not needed
 #Test(result, flag)
+#Test()
