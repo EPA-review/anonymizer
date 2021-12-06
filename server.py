@@ -1,4 +1,4 @@
-from analyzer import analyzeText, serializeList
+from SimpleAnonymizer import AnonymizeText
 from flask import Flask, jsonify, request
 from flask_cors import CORS
 import sys
@@ -13,7 +13,7 @@ def analyze():
     text = requestBody['text']
     names = requestBody['names']
 
-    return jsonify(serializeList(analyzeText(text, names)))
+    return jsonify(AnonymizeText(text, names, []))
 
 
 if __name__ == '__main__':
