@@ -2,6 +2,26 @@
 # from spellchecker import SpellChecker
 import re
 from string import whitespace
+#from SimpleAnonymizer import AnonymizeWord, SetAnonFlag
+from typing import List
+
+class Serializable:
+    def serialize(self):
+        return {}
+
+
+class TextSegment(Serializable):
+    def __init__(self, start: int, end: int, label: str):
+        self.start = start
+        self.end = end
+        self.label = label
+
+    def serialize(self):
+        return {
+            "start": self.start,
+            "end": self.end,
+            "label": self.label
+        }
 
 # Nicknames are not passed into the call to AnonymizeText
 #_nicknames = ['rick', 'ricky', 'richie', 'dick', 'stu', 'elle', 'liz', 'jay', 'kat', 'cat']
@@ -577,34 +597,40 @@ SetAnonFlag takes the word and determines if it is a title. If so then the next 
 """
 def AnonymizeText(T, Names, NickNames):
     _result = []
+    _words = extractWords(T)
 
-    whitespaces = [i for i, char in enumerate(T) if char in whitespace]
-    whitespaces.append(len(T))
+    #whitespaces = [i for i, char in enumerate(T) if char in whitespace]
+    #whitespaces.append(len(T))
 
-    start = 0
-    end = 0
+    #start = 0
+    #end = 0
 
-    regex = re.compile('[^a-zA-Z0-9\s\']')
+    #regex = re.compile('[^a-zA-Z0-9\s\']')
     # First parameter is the replacement, second parameter is your input string
-    _text = regex.sub('', T)
-    _words = _text.split()
+    #_text = regex.sub('', T)
+    #_words = _text.split()
 
     prev = None
-    next = None
+    _next = None
     _flag = False
     index = 0
     for w in _words:
-        end = whitespaces[index]
+
+        #end = whitespaces[index]
         #tmp = T[start:end]
         #print(tmp)
 
-        resultAsDict = {"start":start,"end":end,"label":""}
+        _label = w.label
+        _start = w.start
+        _end = w.end
+        resultAsDict = {"start":_start,"end":_end,"label":""}
 
         if (index + 1 < len(_words)):
-            next = _words[index + 1]
+            _next = _words[index + 1].label
         else:
             next = None
-        _anonWord = AnonymizeWord(w, prev, next, Names, NickNames, _flag)
+
+        _anonWord = AnonymizeWord(_label, prev, _next, Names, NickNames, _flag)
 
         if _anonWord is None:
             output = "None"
@@ -615,12 +641,11 @@ def AnonymizeText(T, Names, NickNames):
             resultAsDict["label"] = output
             _result.append(resultAsDict)
 
-        _flag = SetAnonFlag(w, _flag)
+        _flag = SetAnonFlag(_label, _flag)
 
-        #print("word = " + w + ", result = " + output + ", flag = " + str(_flag))
-        prev = w
+        print("word = " + w.label + ", result = " + output + ", flag = " + str(_flag) + ", start = " + str(_start) + ", end = " + str(_end))
+        prev = _label
         index = index + 1
-        start = end + 1
 
     #print("anonymized text = " + _result)
     return _result
@@ -703,7 +728,7 @@ flag = False
 """
 def Test():
     text = 'I\' m a fool of a took. Dr.  Wilson\'s. Dr P Wilson, . Jay as discussed Dr. A Henderson think you need to work on strategies to help you ensure that you are completing full reassessments including being aware of what results or tests that you have ordered are still outstanding. You also would improve by being more mindful of timing to reassess patients. Your patient care was very EB and you are quite good at accessing relevant guidelines and critically thinking your way through them as they would apply to your particular patient. wasn\'t'
-    text = 'Hello, I am Dr. Watson'
+    text = 'Excellent management of a chest pain that was going to be placed in the waiting room.  Dr Benjamin recognized the STEMI in a timely manner, began appropriate treatment and had to advocate for STAT transfer to university hospital due to a significant back log of transfers.'
     names = ['Jason','Wilson','Joanna','Smith']
     nicknames = {"richard":['rick','ricky','richie','dick'],
                  "stewart":['stu'],
@@ -712,6 +737,58 @@ def Test():
                  "jason":['jay']
                 }
     AnonymizeText(text,names,nicknames)
+
+
+
+def analyzeText(text: str, names: List[str]):
+    flag = False
+
+    textSegments = extractWords(text)
+    result: List[TextSegment] = []
+    textSegmentsLength = len(textSegments)
+    for i in range(textSegmentsLength):
+        textSegment = textSegments[i]
+        previousSegment = textSegments[i - 1] if i > 0 else None
+        nextSegment = textSegments[i + 1] if i < textSegmentsLength - 1 else None
+        label = AnonymizeWord(
+            textSegment.label,
+            previousSegment.label if previousSegment else None,
+            nextSegment.label if nextSegment else None,
+            names,
+            flag
+        )
+        flag = SetAnonFlag(textSegment.label, flag)
+        if label is not None:
+            textSegment.label = label
+            result.append(textSegment)
+
+    return result
+
+def extractWords(text: str):
+    words: List[TextSegment] = []
+    startIndex: int = None
+    currentWord: str = ''
+    for i in range(len(text)):
+        character = text[i]
+        match = re.match('[\w\'/]+', character)
+        if match:
+            currentWord += character
+            if startIndex is None:
+                startIndex = i
+            if i == len(text) - 1:
+                words.append(TextSegment(startIndex, i, currentWord))
+                currentWord = ''
+                startIndex = None
+        elif startIndex is not None:
+            words.append(TextSegment(startIndex, i, currentWord))
+            currentWord = ''
+            startIndex = None
+    return words
+
+
+def serializeList(myList: List[Serializable]):
+    return list(map(lambda item: item.serialize(), myList))
+
 
 # comment this out when the test is not needed
 #Test(result, flag)
