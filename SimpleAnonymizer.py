@@ -643,7 +643,7 @@ def AnonymizeText(T, Names, NickNames):
 
         _flag = SetAnonFlag(_label, _flag)
 
-        print("word = " + w.label + ", result = " + output + ", flag = " + str(_flag) + ", start = " + str(_start) + ", end = " + str(_end))
+        # print("word = " + w.label + ", result = " + output + ", flag = " + str(_flag) + ", start = " + str(_start) + ", end = " + str(_end))
         prev = _label
         index = index + 1
 
