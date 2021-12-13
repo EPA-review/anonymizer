@@ -9,12 +9,12 @@ tests: List[TestCase] = [
     TestCase('Managed the resp distress, approp ddx, proper interp of ABG, Discussed disposition, tx', [
              'Someone']),
     TestCase('EPA completed by Dr. A. McConnell on ID rotation \r\nSubmitted on Oct 22 for week of Sept 4-7 \r\nNeeded to review the microbiology of the infection and characteristics of the appropriate antibiotic for the infection.',
-             ['Grayson', 'Wilson', 'Lynsey', 'Martin'])
+             ['Grayson', 'Wilson', 'Lynsey', 'Martin']),
+    TestCase('Sey successfully managed a first presentation single seizure patient', ['Seyara', 'Shwetz', 'Schaana', 'Van', 'De', 'Kamp'])
 ]
-nicknames = {}
-
-with open('./nicknames.json', 'r') as file:
-    nicknames = json.loads(file.read())
+nicknames = {
+    'Seyara': 'Sey'
+}
 
 for test in tests:
     text = test.text
