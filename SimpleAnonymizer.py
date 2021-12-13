@@ -599,6 +599,8 @@ def AnonymizeText(T, Names, NickNames):
     _result = []
     _words = extractWords(T)
 
+    nicknamesWithLowercaseKeys = dict((k.lower(), v) for k, v in NickNames.items())
+
     #whitespaces = [i for i, char in enumerate(T) if char in whitespace]
     #whitespaces.append(len(T))
 
@@ -630,7 +632,7 @@ def AnonymizeText(T, Names, NickNames):
         else:
             next = None
 
-        _anonWord = AnonymizeWord(_label, prev, _next, Names, NickNames, _flag)
+        _anonWord = AnonymizeWord(_label, prev, _next, Names, nicknamesWithLowercaseKeys, _flag)
 
         if _anonWord is None:
             output = "None"

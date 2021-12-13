@@ -13,7 +13,7 @@ tests: List[TestCase] = [
     TestCase('Sey successfully managed a first presentation single seizure patient', ['Seyara', 'Shwetz', 'Schaana', 'Van', 'De', 'Kamp'])
 ]
 nicknames = {
-    'Seyara': 'Sey'
+    'Seyara': ['Sey']
 }
 
 for test in tests:
