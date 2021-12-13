@@ -10,13 +10,25 @@ CORS(app)
 @app.route('/analyze', methods=['POST'])
 def analyze():
     requestBody = request.json
-    text = requestBody['text']
-    names = requestBody['names']
-    nicknames = {}
-    with open('./nicknames.json', 'r') as file:
-        nicknames = json.loads(file.read())
+    records = requestBody['records']
+    nicknames = requestBody['nicknames']
 
-    return jsonify(AnonymizeText(text, names, nicknames))
+    results = []
+    for record in records:
+        index = record['index']
+        text = record['text']
+        names = record['names']
+        result = {
+            'index': index,
+            'result': AnonymizeText(text, names, nicknames)
+        }
+        results.append(result)
+
+    return jsonify(results)
+
+
+def analyzeSingleRecord(text, names, nicknames):
+    return AnonymizeText(text, names, nicknames)
 
 
 if __name__ == '__main__':
