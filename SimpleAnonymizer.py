@@ -4,7 +4,6 @@ import re
 from string import whitespace
 #from SimpleAnonymizer import AnonymizeWord, SetAnonFlag
 from typing import List, NamedTuple
-from flask import json
 
 class Serializable:
     def serialize(self):
@@ -767,17 +766,6 @@ def Test(R, F):
 result = ""
 flag = False
 """
-def Test():
-    text = 'EPA completed by Dr. A. McConnell on ID rotation \r\nSubmitted on Oct 22 for week of Sept 4-7 \r\nNeeded to review the microbiology of the infection and characteristics of the appropriate antibiotic for the infection.'
-    names = ['Grayson', 'Wilson', 'Lynsey', 'Martin']
-    nicknames = {"richard":['rick','ricky','richie','dick'],
-                 "stewart":['stu'],
-                 "samuel":['sam','sammy'],
-                 "elizabeth":['elle', 'liz'],
-                 "jason":['jay']
-                }
-    output = AnonymizeText(text,names,nicknames)
-    print(output)
 
 
 def analyzeText(text: str, names: List[str]):
@@ -831,6 +819,17 @@ def extractWords(text: str):
 def serializeList(myList: List[Serializable]):
     return list(map(lambda item: item.serialize(), myList))
 
+def Test():
+    text = 'EPA completed by Dr. A. McConnell on ID rotation \r\nSubmitted on Oct 22 for week of Sept 4-7 \r\nNeeded to review the microbiology of the infection and characteristics of the appropriate antibiotic for the infection.'
+    names = ['Grayson', 'Wilson', 'Lynsey', 'Martin']
+    nicknames = {"richard":['rick','ricky','richie','dick'],
+                 "stewart":['stu'],
+                 "samuel":['sam','sammy'],
+                 "elizabeth":['elle', 'liz'],
+                 "jason":['jay']
+                }
+    output = AnonymizeText(text,names,nicknames)
+    print(output)
 
 def Test2():
     TestCase = NamedTuple('Test', [('text', str), ('names', List[str])])
