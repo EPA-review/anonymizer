@@ -877,8 +877,8 @@ def Test2():
 
 
 # comment this out when the test is not needed
-verbose = True
-testing = True
+verbose = False
+testing = False
 if testing:
     Test()
 #    Test2()
