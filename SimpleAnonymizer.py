@@ -771,6 +771,7 @@ def Test(R, F):
 result = ""
 flag = False
 """
+<<<<<<< HEAD
 def Test():
     text = 'Richard\'s Rick\'s EPA completed by Dr. A. McConnell on ID rotation \r\nSubmitted on Oct 22 for week of Sept 4-7 \r\nNeeded to review the microbiology of the infection and characteristics of the appropriate antibiotic for the infection.'
     names = ['Richard', 'Wilson', 'Lynsey', 'Martin']
@@ -782,6 +783,8 @@ def Test():
                 }
     output = AnonymizeText(text,names,nicknames)
     print(output)
+=======
+>>>>>>> 1a4b7851a8bef8ea55b3deb806c4f7b576897228
 
 
 def analyzeText(text: str, names: List[str]):
@@ -846,6 +849,17 @@ def extractWords(text: str):
 def serializeList(myList: List[Serializable]):
     return list(map(lambda item: item.serialize(), myList))
 
+def Test():
+    text = 'EPA completed by Dr. A. McConnell on ID rotation \r\nSubmitted on Oct 22 for week of Sept 4-7 \r\nNeeded to review the microbiology of the infection and characteristics of the appropriate antibiotic for the infection.'
+    names = ['Grayson', 'Wilson', 'Lynsey', 'Martin']
+    nicknames = {"richard":['rick','ricky','richie','dick'],
+                 "stewart":['stu'],
+                 "samuel":['sam','sammy'],
+                 "elizabeth":['elle', 'liz'],
+                 "jason":['jay']
+                }
+    output = AnonymizeText(text,names,nicknames)
+    print(output)
 
 def Test2():
     TestCase = NamedTuple('Test', [('text', str), ('names', List[str])])
